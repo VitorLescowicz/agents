@@ -1,12 +1,23 @@
 """Modulo de ingestao: leitura de PDFs e extracao de texto."""
 
+import io
 import logging
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 import fitz  # PyMuPDF
+import pytesseract
+from PIL import Image
 
-from src.config import DATA_RAW_DIR, SUPPORTED_EXTENSIONS
+from src.config import (
+    DATA_RAW_DIR,
+    OCR_DPI,
+    OCR_ENABLED,
+    OCR_LANG,
+    SUPPORTED_EXTENSIONS,
+    TESSERACT_CMD,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +29,34 @@ class Document:
     filename: str
     text: str
     num_pages: int
+    ocr_used: bool = False
+    ocr_pages: int = 0
+
+
+@lru_cache(maxsize=1)
+def _ocr_available() -> bool:
+    """Valida se o fallback de OCR esta disponivel no ambiente."""
+    if not OCR_ENABLED:
+        logger.info("OCR desabilitado por configuracao.")
+        return False
+
+    if TESSERACT_CMD:
+        pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
+
+    try:
+        pytesseract.get_tesseract_version()
+        return True
+    except Exception as exc:
+        logger.warning("OCR indisponivel no ambiente atual: %s", exc)
+        return False
+
+
+def _ocr_page(page: fitz.Page) -> str:
+    """Renderiza uma pagina como imagem e aplica OCR."""
+    matrix = fitz.Matrix(OCR_DPI / 72, OCR_DPI / 72)
+    pixmap = page.get_pixmap(matrix=matrix, alpha=False)
+    image = Image.open(io.BytesIO(pixmap.tobytes("png")))
+    return pytesseract.image_to_string(image, lang=OCR_LANG).strip()
 
 
 def read_pdf(filepath: Path) -> Document | None:
@@ -32,8 +71,19 @@ def read_pdf(filepath: Path) -> Document | None:
     try:
         doc = fitz.open(str(filepath))
         text_parts: list[str] = []
+        ocr_used = False
+        ocr_pages = 0
+
         for page in doc:
-            text_parts.append(page.get_text())
+            page_text = page.get_text("text").strip()
+            if not page_text and _ocr_available():
+                page_text = _ocr_page(page)
+                if page_text:
+                    ocr_used = True
+                    ocr_pages += 1
+
+            if page_text:
+                text_parts.append(page_text)
         text = "\n".join(text_parts)
         num_pages = len(doc)
         doc.close()
@@ -48,7 +98,20 @@ def read_pdf(filepath: Path) -> Document | None:
             num_pages,
             len(text),
         )
-        return Document(filename=filepath.name, text=text, num_pages=num_pages)
+        if ocr_used:
+            logger.info(
+                "OCR utilizado em %s (%d de %d paginas)",
+                filepath.name,
+                ocr_pages,
+                num_pages,
+            )
+        return Document(
+            filename=filepath.name,
+            text=text,
+            num_pages=num_pages,
+            ocr_used=ocr_used,
+            ocr_pages=ocr_pages,
+        )
 
     except Exception as e:
         logger.warning("Erro ao ler PDF '%s': %s", filepath.name, e)

@@ -13,4 +13,8 @@ dependencies = [
 ]
 
 [project.scripts]
-app = "streamlit run src/app.py"
+app = "src.cli:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
