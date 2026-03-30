@@ -11,6 +11,11 @@ Observacao sobre o enunciado:
 - este repositorio acabou ficando com implementacao funcional dos dois, o que excede o minimo pedido
 - os READMEs de cada pasta detalham arquitetura, execucao e limites atuais
 
+Documentacao adicional:
+
+- `docs/ARCHITECTURE.md`: visao arquitetural consolidada para a entrevista
+- `docs/DELIVERY_EVIDENCE.md`: evidencias objetivas da entrega e da validacao
+
 ## Estrutura
 
 ```text
@@ -89,7 +94,7 @@ O workflow em `.github/workflows/ci.yml` faz:
 
 Ultima validacao remota:
 
-- `CI` run `#8` em `2026-03-30`: smoke tests + integracao Gemini aprovados
+- `CI` run `#10` em `2026-03-30`: unit tests, smoke tests e integracao Gemini aprovados
 
 ## Codespaces
 

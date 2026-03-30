@@ -25,6 +25,9 @@ OUTPUT_DIR = BASE_DIR / "output"
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash")
 LLM_TEMPERATURE = 0.0
+LLM_RETRY_ATTEMPTS = max(1, int(os.getenv("LLM_RETRY_ATTEMPTS", "3")))
+LLM_RETRY_BASE_DELAY = float(os.getenv("LLM_RETRY_BASE_DELAY", "1.5"))
+LLM_RETRY_MAX_DELAY = float(os.getenv("LLM_RETRY_MAX_DELAY", "8.0"))
 
 # Configuracao de OCR
 OCR_ENABLED = _env_flag("OCR_ENABLED", True)

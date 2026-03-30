@@ -86,6 +86,7 @@ Estas consultas foram validadas durante o desenvolvimento e/ou na CI:
 - unit tests para parsing de respostas, limpeza de SQL e normalizacao do plano
 - smoke test para introspeccao do schema, execucao SQLite e heuristica de graficos
 - integracao com Gemini na CI quando `GOOGLE_API_KEY` esta configurada
+- backoff exponencial para falhas transientes ou quota temporaria do LLM
 
 ## Melhorias e extensoes
 

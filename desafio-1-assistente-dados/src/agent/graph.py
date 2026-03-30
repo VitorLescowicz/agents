@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,7 @@ from src.agent.helpers import (
     clean_sql,
     extract_viz_type,
     format_prior_findings,
+    invoke_with_retry,
     message_text,
     normalize_steps,
     parse_json_object,
@@ -31,11 +33,15 @@ from src.agent.tools import fetch_schema, run_sql
 from src.viz.chart_picker import pick_chart
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 _DEFAULT_DB = Path(__file__).resolve().parents[2] / "data" / "clientes_completo.db"
 DB_PATH = Path(os.getenv("DB_PATH", str(_DEFAULT_DB)))
 MAX_RETRIES = 3
 LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash")
+LLM_RETRY_ATTEMPTS = max(1, int(os.getenv("LLM_RETRY_ATTEMPTS", "3")))
+LLM_RETRY_BASE_DELAY = float(os.getenv("LLM_RETRY_BASE_DELAY", "1.5"))
+LLM_RETRY_MAX_DELAY = float(os.getenv("LLM_RETRY_MAX_DELAY", "8.0"))
 
 
 def _get_llm() -> ChatGoogleGenerativeAI:
@@ -68,7 +74,14 @@ def analyze_question(state: AgentState) -> dict[str, Any]:
     )
 
     try:
-        response = llm.invoke(prompt)
+        response = invoke_with_retry(
+            llm,
+            prompt,
+            max_attempts=LLM_RETRY_ATTEMPTS,
+            base_delay=LLM_RETRY_BASE_DELAY,
+            max_delay=LLM_RETRY_MAX_DELAY,
+            logger=logger,
+        )
         plan = parse_json_object(response.content)
         analysis_summary = str(plan.get("analysis_summary", "")).strip()
         if not analysis_summary:
@@ -122,7 +135,14 @@ def plan_query(state: AgentState) -> dict[str, Any]:
         current_step_question=state["current_step_question"],
         prior_findings=format_prior_findings(state.get("step_summaries", [])),
     )
-    response = llm.invoke(prompt)
+    response = invoke_with_retry(
+        llm,
+        prompt,
+        max_attempts=LLM_RETRY_ATTEMPTS,
+        base_delay=LLM_RETRY_BASE_DELAY,
+        max_delay=LLM_RETRY_MAX_DELAY,
+        logger=logger,
+    )
     sql = clean_sql(response.content)
     trace = _append_trace(
         state,
@@ -198,7 +218,14 @@ def handle_error(state: AgentState) -> dict[str, Any]:
         sql_query=state["sql_query"],
         error=state["error"],
     )
-    response = llm.invoke(prompt)
+    response = invoke_with_retry(
+        llm,
+        prompt,
+        max_attempts=LLM_RETRY_ATTEMPTS,
+        base_delay=LLM_RETRY_BASE_DELAY,
+        max_delay=LLM_RETRY_MAX_DELAY,
+        logger=logger,
+    )
     sql = clean_sql(response.content)
     trace = _append_trace(
         state,
@@ -312,7 +339,14 @@ def synthesize_answer(state: AgentState) -> dict[str, Any]:
         columns=columns,
         rows=rows[:20],
     )
-    response = llm.invoke(prompt)
+    response = invoke_with_retry(
+        llm,
+        prompt,
+        max_attempts=LLM_RETRY_ATTEMPTS,
+        base_delay=LLM_RETRY_BASE_DELAY,
+        max_delay=LLM_RETRY_MAX_DELAY,
+        logger=logger,
+    )
     answer_text = message_text(response.content)
     viz_type = extract_viz_type(answer_text)
     if viz_type == "table":

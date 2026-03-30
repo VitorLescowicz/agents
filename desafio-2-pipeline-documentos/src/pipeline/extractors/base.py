@@ -8,8 +8,16 @@ from typing import Type
 from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, ValidationError
 
-from src.config import GOOGLE_API_KEY, LLM_MODEL, LLM_TEMPERATURE, MAX_RETRIES
-from src.pipeline.llm_utils import strip_code_fences
+from src.config import (
+    GOOGLE_API_KEY,
+    LLM_MODEL,
+    LLM_RETRY_ATTEMPTS,
+    LLM_RETRY_BASE_DELAY,
+    LLM_RETRY_MAX_DELAY,
+    LLM_TEMPERATURE,
+    MAX_RETRIES,
+)
+from src.pipeline.llm_utils import invoke_with_retry, strip_code_fences
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +89,14 @@ class BaseExtractor(ABC):
             prompt = self.build_prompt(text, previous_errors)
 
             try:
-                response = llm.invoke(prompt)
+                response = invoke_with_retry(
+                    llm,
+                    prompt,
+                    max_attempts=LLM_RETRY_ATTEMPTS,
+                    base_delay=LLM_RETRY_BASE_DELAY,
+                    max_delay=LLM_RETRY_MAX_DELAY,
+                    logger=logger,
+                )
                 raw_data = self._parse_json_response(response.content)
                 last_raw_data = raw_data
 

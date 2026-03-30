@@ -13,6 +13,7 @@ from src.agent.helpers import (  # noqa: E402
     message_text,
     normalize_steps,
     parse_json_object,
+    should_retry_llm_error,
     summarize_step_result,
 )
 
@@ -39,6 +40,10 @@ class TestAgentHelpers(unittest.TestCase):
     def test_summarize_step_result_scalar(self) -> None:
         summary = summarize_step_result("contar clientes", ["total_clientes"], [(42,)])
         self.assertIn("total_clientes = 42", summary)
+
+    def test_should_retry_llm_error_detects_quota_failure(self) -> None:
+        exc = RuntimeError("429 RESOURCE_EXHAUSTED: quota exceeded")
+        self.assertTrue(should_retry_llm_error(exc))
 
 
 if __name__ == "__main__":

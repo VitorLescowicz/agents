@@ -62,6 +62,9 @@ Variaveis relevantes em `.env`:
 ```env
 GOOGLE_API_KEY=
 LLM_MODEL=gemini-2.5-flash
+LLM_RETRY_ATTEMPTS=3
+LLM_RETRY_BASE_DELAY=1.5
+LLM_RETRY_MAX_DELAY=8.0
 OCR_ENABLED=true
 OCR_LANG=por
 OCR_DPI=300
@@ -92,6 +95,7 @@ Arquivos gerados em `output/`:
 3. Pydantic foi usado para impor JSON estrito e alimentar retries guiados por erro, em vez de aceitar texto livre do modelo.
 4. Persistencia em JSON por tipo + CSV consolidado facilita consumo operacional e auditoria sem obrigar banco adicional.
 5. Processamento sequencial foi preferido nesta versao por previsibilidade de custo, simplicidade de recuperacao e menor risco de rate limit.
+6. Chamadas ao Gemini usam backoff exponencial para absorver erros transientes e quota temporaria.
 
 ## Melhorias futuras
 
