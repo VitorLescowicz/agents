@@ -1,17 +1,24 @@
 # Franq AI Engineer Challenges
 
-Repositorio com as duas solucoes do desafio tecnico:
+Repositorio com os dois desafios tecnicos e os anexos originais usados para validacao local e na CI.
 
 - `desafio-1-assistente-dados`: assistente conversacional que gera SQL sobre SQLite e responde com visualizacao.
 - `desafio-2-pipeline-documentos`: pipeline de ingestao, OCR, classificacao e extracao estruturada para PDFs digitalizados.
+
+Observacao sobre o enunciado:
+
+- o PDF pedia a implementacao completa de apenas um desafio e a discussao arquitetural do outro
+- este repositorio acabou ficando com implementacao funcional dos dois, o que excede o minimo pedido
+- os READMEs de cada pasta detalham arquitetura, execucao e limites atuais
 
 ## Estrutura
 
 ```text
 .
-├── anexo_desafio_1.db
-├── anexo_desafio_2.zip
-├── ai_engineer_pl.pdf
+├── assets/
+│   ├── ai_engineer_pl.pdf
+│   ├── anexo_desafio_1.db
+│   └── anexo_desafio_2.zip
 ├── desafio-1-assistente-dados/
 ├── desafio-2-pipeline-documentos/
 └── scripts/
@@ -19,7 +26,7 @@ Repositorio com as duas solucoes do desafio tecnico:
 
 ## Setup rapido
 
-Os assets originais ficam na raiz. Para materializar os dados dentro dos projetos:
+Os anexos originais ficam em `assets/`. Para materializar os dados dentro dos projetos:
 
 ```bash
 python scripts/materialize_assets.py
@@ -27,8 +34,8 @@ python scripts/materialize_assets.py
 
 Isso:
 
-- copia `anexo_desafio_1.db` para `desafio-1-assistente-dados/data/clientes_completo.db`
-- extrai `anexo_desafio_2.zip` para `desafio-2-pipeline-documentos/data/raw/`
+- copia `assets/anexo_desafio_1.db` para `desafio-1-assistente-dados/data/clientes_completo.db`
+- extrai `assets/anexo_desafio_2.zip` para `desafio-2-pipeline-documentos/data/raw/`
 
 ## Ambiente local
 
@@ -78,6 +85,10 @@ O workflow em `.github/workflows/ci.yml` faz:
 - materializacao automatica dos assets
 - smoke tests do desafio 1 e do desafio 2
 - job opcional de integracao com Gemini, caso o secret `GOOGLE_API_KEY` esteja configurado
+
+Ultima validacao remota:
+
+- `CI` run `#8` em `2026-03-30`: smoke tests + integracao Gemini aprovados
 
 ## Codespaces
 

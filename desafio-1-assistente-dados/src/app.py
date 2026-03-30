@@ -63,7 +63,7 @@ with st.sidebar:
         st.error(f"Banco nao encontrado em `{DB_PATH}`")
 
     st.divider()
-    st.caption("Powered by Gemini 2.0 Flash + LangGraph")
+    st.caption("Powered by Gemini 2.5 Flash + LangGraph")
 
 # ── Session state ────────────────────────────────────────────────────
 

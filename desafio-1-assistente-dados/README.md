@@ -21,6 +21,17 @@ Responsabilidades:
 - `handle_error`: tentativa de correcao de SQL
 - `synthesize_answer`: resposta final e escolha de visualizacao
 
+## Transparencia da resposta
+
+O frontend mostra:
+
+- resposta em linguagem natural
+- SQL executada
+- erro corrigido, quando houve retry
+- visualizacao dinamica coerente com o resultado
+
+Isso cobre o requisito de expor como a resposta foi produzida, ainda que hoje a transparencia esteja mais focada na query final do que em um log completo de raciocinio multi-etapas.
+
 ## Stack
 
 - LangGraph
@@ -53,3 +64,21 @@ uv run app
 3. Quantos chamados de suporte foram resolvidos vs nao resolvidos?
 4. Qual o ticket medio por canal de compra?
 5. Quais clientes interagiram com campanhas de marketing mas nao compraram nos ultimos 3 meses?
+
+## Consultas testadas
+
+Estas consultas foram validadas durante o desenvolvimento e/ou na CI:
+
+1. Quais sao os 3 clientes que mais gastaram?
+2. Qual a distribuicao de compras por categoria?
+3. Quantos chamados de suporte foram resolvidos vs nao resolvidos?
+4. Qual o ticket medio por canal de compra?
+5. Liste os 5 estados com maior numero de clientes que compraram via app.
+
+## Melhorias e extensoes
+
+- adicionar decomposicao explicita de perguntas complexas em multiplas consultas
+- registrar trilha completa de raciocinio do agente no estado e na UI
+- incluir avaliacao automatizada com suite de perguntas esperadas e verificacao semantica
+- adicionar cache de schema e resultados para reduzir latencia e custo
+- suportar selecao manual de visualizacao pelo usuario quando houver ambiguidade

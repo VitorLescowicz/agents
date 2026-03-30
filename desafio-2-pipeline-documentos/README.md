@@ -13,6 +13,8 @@ O fluxo implementado:
 5. extrai dados estruturados com validacao Pydantic
 6. persiste os resultados em JSON, CSV e log de processamento
 
+Embora o enunciado pedisse implementacao completa de apenas um desafio, este repositorio mantem este pipeline funcional para permitir validacao pratica e discussao arquitetural durante a entrevista.
+
 ## Arquitetura
 
 ```text
@@ -59,6 +61,7 @@ Variaveis relevantes em `.env`:
 
 ```env
 GOOGLE_API_KEY=
+LLM_MODEL=gemini-2.5-flash
 OCR_ENABLED=true
 OCR_LANG=por
 OCR_DPI=300
@@ -82,10 +85,17 @@ Arquivos gerados em `output/`:
 - `resultados.csv`
 - `processing_log.json`
 
-## Decisoes tecnicas
+## Justificativa da arquitetura
 
-1. Gemini Flash para classificacao e extracao estruturada.
-2. Pydantic para validar a saida e orientar retries.
-3. OCR com Tesseract porque o dataset do desafio contem PDFs digitalizados sem texto embutido.
-4. Processamento sequencial para reduzir rate limit e simplificar recuperacao de falhas.
-5. Fallback gracioso: documentos com erro nao interrompem o restante do lote.
+1. OCR com Tesseract + PyMuPDF foi escolhido em vez de depender apenas de texto embutido, porque o dataset fornecido contem PDFs digitalizados sem camada textual.
+2. Classificacao e extracao separadas simplificam manutencao e reduzem erro de schema quando comparado a um unico prompt monolitico.
+3. Pydantic foi usado para impor JSON estrito e alimentar retries guiados por erro, em vez de aceitar texto livre do modelo.
+4. Persistencia em JSON por tipo + CSV consolidado facilita consumo operacional e auditoria sem obrigar banco adicional.
+5. Processamento sequencial foi preferido nesta versao por previsibilidade de custo, simplicidade de recuperacao e menor risco de rate limit.
+
+## Melhorias futuras
+
+- paralelizar lotes com controle de concorrencia e backoff por quota
+- adicionar benchmark de custo/latencia por etapa
+- versionar prompts e schemas para reprocessamento reproduzivel
+- adicionar amostragem automatica de qualidade com golden set rotulado

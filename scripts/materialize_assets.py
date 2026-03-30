@@ -7,9 +7,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DB_SOURCE = ROOT / "anexo_desafio_1.db"
+ASSETS_DIR = ROOT / "assets"
+DB_SOURCE = ASSETS_DIR / "anexo_desafio_1.db"
 DB_DEST = ROOT / "desafio-1-assistente-dados" / "data" / "clientes_completo.db"
-PDF_ZIP_SOURCE = ROOT / "anexo_desafio_2.zip"
+PDF_ZIP_SOURCE = ASSETS_DIR / "anexo_desafio_2.zip"
 PDF_DEST_DIR = ROOT / "desafio-2-pipeline-documentos" / "data" / "raw"
 
 
@@ -42,6 +43,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Materialize challenge assets into both projects.")
     parser.add_argument("--force", action="store_true", help="Overwrite existing extracted/copied assets.")
     args = parser.parse_args()
+
+    if not DB_SOURCE.exists():
+        raise FileNotFoundError(f"Database asset not found: {DB_SOURCE}")
+    if not PDF_ZIP_SOURCE.exists():
+        raise FileNotFoundError(f"PDF archive asset not found: {PDF_ZIP_SOURCE}")
 
     _copy_db(force=args.force)
     _extract_pdfs(force=args.force)
