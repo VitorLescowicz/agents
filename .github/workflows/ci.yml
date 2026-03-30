@@ -103,11 +103,14 @@ jobs:
           try:
               result = ask("Quais sao os 3 clientes que mais gastaram?")
               if not result.get("answer"):
-                  raise SystemExit("No answer returned by desafio 1 agent")
+                  raise RuntimeError("No answer returned by desafio 1 agent")
               if not result.get("sql_query"):
-                  raise SystemExit("No SQL returned by desafio 1 agent")
+                  raise RuntimeError("No SQL returned by desafio 1 agent")
               print("desafio-1 Gemini integration passed")
-          except Exception:
+          except BaseException as exc:
+              print(
+                  f"::error title=desafio-1 Gemini integration::{type(exc).__name__}: {exc}"
+              )
               traceback.print_exc()
               raise
           PY
@@ -135,9 +138,12 @@ jobs:
               main(sample_dir, output_dir)
 
               if not (output_dir / "resultados.csv").exists():
-                  raise SystemExit("Pipeline did not generate resultados.csv")
+                  raise RuntimeError("Pipeline did not generate resultados.csv")
               print("desafio-2 Gemini integration passed")
-          except Exception:
+          except BaseException as exc:
+              print(
+                  f"::error title=desafio-2 Gemini integration::{type(exc).__name__}: {exc}"
+              )
               traceback.print_exc()
               raise
           PY
