@@ -39,6 +39,14 @@ jobs:
         working-directory: desafio-2-pipeline-documentos
         run: uv sync
 
+      - name: Run desafio 1 unit tests
+        working-directory: desafio-1-assistente-dados
+        run: uv run python -m unittest discover -s tests -v
+
+      - name: Run desafio 2 unit tests
+        working-directory: desafio-2-pipeline-documentos
+        run: uv run python -m unittest discover -s tests -v
+
       - name: Run desafio 1 smoke test
         working-directory: desafio-1-assistente-dados
         run: uv run python ../scripts/smoke_desafio_1.py
@@ -92,6 +100,16 @@ jobs:
         working-directory: desafio-2-pipeline-documentos
         run: uv sync
 
+      - name: Run desafio 1 unit tests
+        if: ${{ env.GOOGLE_API_KEY != '' }}
+        working-directory: desafio-1-assistente-dados
+        run: uv run python -m unittest discover -s tests -v
+
+      - name: Run desafio 2 unit tests
+        if: ${{ env.GOOGLE_API_KEY != '' }}
+        working-directory: desafio-2-pipeline-documentos
+        run: uv run python -m unittest discover -s tests -v
+
       - name: Run desafio 1 Gemini integration
         if: ${{ env.GOOGLE_API_KEY != '' }}
         working-directory: desafio-1-assistente-dados
@@ -106,6 +124,10 @@ jobs:
                   raise RuntimeError("No answer returned by desafio 1 agent")
               if not result.get("sql_query"):
                   raise RuntimeError("No SQL returned by desafio 1 agent")
+              if not result.get("step_questions"):
+                  raise RuntimeError("No analysis plan returned by desafio 1 agent")
+              if not result.get("trace"):
+                  raise RuntimeError("No execution trace returned by desafio 1 agent")
               print("desafio-1 Gemini integration passed")
           except BaseException as exc:
               print(

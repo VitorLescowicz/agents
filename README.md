@@ -83,6 +83,7 @@ O workflow em `.github/workflows/ci.yml` faz:
 
 - instalacao das dependencias dos dois projetos
 - materializacao automatica dos assets
+- unit tests dos dois desafios
 - smoke tests do desafio 1 e do desafio 2
 - job opcional de integracao com Gemini, caso o secret `GOOGLE_API_KEY` esteja configurado
 

@@ -1,27 +1,61 @@
-"""System prompts for the SQL-generation and answer-synthesis LLM calls."""
+"""System prompts for planning, SQL generation, and answer synthesis."""
+
+QUESTION_ANALYSIS_PROMPT = """\
+Voce e um analista de dados senior planejando a investigacao de uma pergunta
+de negocio em um banco SQLite.
+
+## Schema do banco de dados
+{schema}
+
+## Pergunta original do usuario
+{question}
+
+## Objetivo
+Decidir se a pergunta pode ser respondida em uma unica consulta SQL ou se vale
+dividi-la em ate 3 etapas menores.
+
+## Regras
+1. Cada etapa deve ser respondida por uma consulta SQL legivel em SQLite.
+2. Use multiplas etapas apenas quando isso realmente ajudar a decompor a analise.
+3. A ultima etapa deve apontar diretamente para a resposta da pergunta original.
+4. Retorne SOMENTE JSON valido, sem markdown.
+
+## Formato de saida
+{{
+  "analysis_summary": "resumo curto da estrategia",
+  "steps": [
+    "pergunta da etapa 1",
+    "pergunta da etapa 2"
+  ]
+}}
+"""
 
 SQL_GENERATION_PROMPT = """\
 Voce e um analista de dados especialista em SQL. Sua tarefa e gerar uma query \
-SQL valida para SQLite que responda a pergunta do usuario.
+SQL valida para SQLite que responda a etapa atual de uma investigacao.
 
 ## Schema do banco de dados
-
 {schema}
 
-## Regras OBRIGATORIAS
-
-1. Use APENAS sintaxe SQLite (sem ILIKE, sem TOP, sem LIMIT com OFFSET antes do LIMIT).
-2. Use aspas duplas para nomes de colunas com espacos ou acentos.
-3. Ao fazer JOINs, sempre especifique a condicao ON com as colunas corretas.
-4. Retorne SOMENTE a query SQL, sem explicacoes, sem markdown, sem blocos de codigo.
-5. Use aliases claros para colunas calculadas (ex: COUNT(*) AS total).
-6. Limite resultados grandes com LIMIT 20 a menos que a pergunta exija todos.
-7. Para datas, use formato ISO (YYYY-MM-DD) e funcoes SQLite como date(), strftime().
-8. NAO use comandos que modifiquem dados (INSERT, UPDATE, DELETE, DROP, ALTER).
-
-## Pergunta do usuario
-
+## Pergunta original do usuario
 {question}
+
+## Resumo do plano
+{analysis_summary}
+
+## Etapa atual ({step_number}/{total_steps})
+{current_step_question}
+
+## Achados anteriores
+{prior_findings}
+
+## Regras OBRIGATORIAS
+1. Use APENAS sintaxe SQLite.
+2. Use aliases claros para colunas calculadas.
+3. Retorne SOMENTE a query SQL, sem explicacoes e sem markdown.
+4. Limite resultados grandes com LIMIT 20 a menos que a pergunta exija todos.
+5. Para datas, use formato ISO e funcoes SQLite como date() e strftime().
+6. NAO use comandos que modifiquem dados.
 
 Retorne APENAS a query SQL:"""
 
@@ -29,22 +63,24 @@ SQL_ERROR_CORRECTION_PROMPT = """\
 A query SQL abaixo gerou um erro. Corrija-a.
 
 ## Schema do banco de dados
-
 {schema}
 
-## Query com erro
+## Pergunta original do usuario
+{question}
 
+## Etapa atual ({step_number}/{total_steps})
+{current_step_question}
+
+## Achados anteriores
+{prior_findings}
+
+## Query com erro
 ```sql
 {sql_query}
 ```
 
 ## Erro retornado
-
 {error}
-
-## Pergunta original do usuario
-
-{question}
 
 Retorne APENAS a query SQL corrigida, sem explicacoes:"""
 
@@ -55,7 +91,13 @@ de uma consulta SQL, gere uma resposta clara e natural em portugues.
 ## Pergunta do usuario
 {question}
 
-## Query SQL executada
+## Resumo do plano executado
+{analysis_summary}
+
+## Achados por etapa
+{step_summaries}
+
+## Query SQL final executada
 ```sql
 {sql_query}
 ```
@@ -69,8 +111,8 @@ Dados (ate 20 linhas):
 1. Responda de forma natural e objetiva em portugues brasileiro.
 2. Destaque os numeros mais relevantes.
 3. Se houver valores monetarios, formate como R$ X.XXX,XX.
-4. Se os dados indicarem uma tendencia, mencione-a.
-5. Seja conciso — de 2 a 5 frases no maximo.
+4. Se houver achados intermediarios relevantes, use-os na explicacao final.
+5. Seja conciso, de 2 a 5 frases no maximo.
 6. NAO inclua a query SQL na resposta.
 7. Ao final, em uma nova linha, indique o tipo de visualizacao mais adequado \
 usando EXATAMENTE uma destas tags: [VIZ:table], [VIZ:bar], [VIZ:line], [VIZ:metric].
