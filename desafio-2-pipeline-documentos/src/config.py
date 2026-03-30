@@ -23,7 +23,7 @@ OUTPUT_DIR = BASE_DIR / "output"
 
 # Configuracao do LLM
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
-LLM_MODEL = "gemini-2.0-flash"
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash")
 LLM_TEMPERATURE = 0.0
 
 # Configuracao de OCR

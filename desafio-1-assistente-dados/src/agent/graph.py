@@ -35,11 +35,12 @@ load_dotenv()
 _DEFAULT_DB = Path(__file__).resolve().parents[2] / "data" / "clientes_completo.db"
 DB_PATH = Path(os.getenv("DB_PATH", str(_DEFAULT_DB)))
 MAX_RETRIES = 3
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash")
 
 
 def _get_llm() -> ChatGoogleGenerativeAI:
     return ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash",
+        model=LLM_MODEL,
         temperature=0,
         google_api_key=os.getenv("GOOGLE_API_KEY"),
     )
