@@ -1,0 +1,16 @@
+[project]
+name = "desafio-1-assistente-dados"
+version = "0.1.0"
+description = "Assistente Virtual de Dados — Franq AI Engineer Challenge"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.2",
+    "langchain-google-genai>=2.0",
+    "streamlit>=1.38",
+    "plotly>=5.0",
+    "python-dotenv>=1.0",
+    "pydantic>=2.0",
+]
+
+[project.scripts]
+app = "streamlit run src/app.py"
