@@ -18,6 +18,9 @@ desafio-1-assistente-dados/.streamlit/secrets.toml
 desafio-2-pipeline-documentos/output/*.json
 desafio-2-pipeline-documentos/output/*.csv
 desafio-2-pipeline-documentos/output/processing_log.json
+workflow_logs.zip
+step*.log
+job*.html
 
 pip-build-tracker-*/
 pip-ephem-wheel-cache-*/

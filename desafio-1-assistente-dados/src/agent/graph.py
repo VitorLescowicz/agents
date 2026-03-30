@@ -126,7 +126,7 @@ def synthesize_answer(state: AgentState) -> dict[str, Any]:
         rows=display_rows,
     )
     response = llm.invoke(prompt)
-    answer_text = response.content
+    answer_text = _message_text(response.content)
 
     # Extract viz tag from LLM response
     viz_type = _extract_viz_type(answer_text)
@@ -186,9 +186,28 @@ def build_graph() -> StateGraph:
 # ── Helpers ──────────────────────────────────────────────────────────
 
 
-def _clean_sql(raw: str) -> str:
+def _message_text(raw: Any) -> str:
+    """Normalize provider-specific LLM content payloads into plain text."""
+    if isinstance(raw, str):
+        return raw
+    if isinstance(raw, list):
+        parts = [_message_text(item) for item in raw]
+        return "\n".join(part for part in parts if part).strip()
+    if isinstance(raw, dict):
+        if isinstance(raw.get("text"), str):
+            return raw["text"]
+        for key in ("content", "parts"):
+            if key in raw:
+                return _message_text(raw[key])
+    text_attr = getattr(raw, "text", None)
+    if isinstance(text_attr, str):
+        return text_attr
+    return str(raw).strip()
+
+
+def _clean_sql(raw: Any) -> str:
     """Strip markdown code fences and whitespace from LLM output."""
-    text = raw.strip()
+    text = _message_text(raw).strip()
     # Remove ```sql ... ``` wrappers
     text = re.sub(r"^```(?:sql)?\s*", "", text)
     text = re.sub(r"\s*```$", "", text)

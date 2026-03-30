@@ -97,14 +97,19 @@ jobs:
         working-directory: desafio-1-assistente-dados
         run: |
           uv run python - <<'PY'
+          import traceback
           from src.agent.graph import ask
 
-          result = ask("Quais sao os 3 clientes que mais gastaram?")
-          if not result.get("answer"):
-              raise SystemExit("No answer returned by desafio 1 agent")
-          if not result.get("sql_query"):
-              raise SystemExit("No SQL returned by desafio 1 agent")
-          print("desafio-1 Gemini integration passed")
+          try:
+              result = ask("Quais sao os 3 clientes que mais gastaram?")
+              if not result.get("answer"):
+                  raise SystemExit("No answer returned by desafio 1 agent")
+              if not result.get("sql_query"):
+                  raise SystemExit("No SQL returned by desafio 1 agent")
+              print("desafio-1 Gemini integration passed")
+          except Exception:
+              traceback.print_exc()
+              raise
           PY
 
       - name: Run desafio 2 Gemini integration on a small sample
@@ -113,21 +118,26 @@ jobs:
         run: |
           uv run python - <<'PY'
           import shutil
+          import traceback
           from pathlib import Path
           from src.main import main
 
-          sample_dir = Path("data/sample_raw")
-          output_dir = Path("output/ci-sample")
-          if sample_dir.exists():
-              shutil.rmtree(sample_dir)
-          sample_dir.mkdir(parents=True, exist_ok=True)
+          try:
+              sample_dir = Path("data/sample_raw")
+              output_dir = Path("output/ci-sample")
+              if sample_dir.exists():
+                  shutil.rmtree(sample_dir)
+              sample_dir.mkdir(parents=True, exist_ok=True)
 
-          for pdf in sorted(Path("data/raw").glob("*.pdf"))[:3]:
-              shutil.copy2(pdf, sample_dir / pdf.name)
+              for pdf in sorted(Path("data/raw").glob("*.pdf"))[:3]:
+                  shutil.copy2(pdf, sample_dir / pdf.name)
 
-          main(sample_dir, output_dir)
+              main(sample_dir, output_dir)
 
-          if not (output_dir / "resultados.csv").exists():
-              raise SystemExit("Pipeline did not generate resultados.csv")
-          print("desafio-2 Gemini integration passed")
+              if not (output_dir / "resultados.csv").exists():
+                  raise SystemExit("Pipeline did not generate resultados.csv")
+              print("desafio-2 Gemini integration passed")
+          except Exception:
+              traceback.print_exc()
+              raise
           PY

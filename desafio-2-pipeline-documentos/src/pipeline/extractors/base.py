@@ -9,6 +9,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, ValidationError
 
 from src.config import GOOGLE_API_KEY, LLM_MODEL, LLM_TEMPERATURE, MAX_RETRIES
+from src.pipeline.llm_utils import strip_code_fences
 
 logger = logging.getLogger(__name__)
 
@@ -54,17 +55,9 @@ class BaseExtractor(ABC):
             google_api_key=GOOGLE_API_KEY,
         )
 
-    def _parse_json_response(self, content: str) -> dict:
+    def _parse_json_response(self, content: object) -> dict:
         """Extrai JSON da resposta do LLM, removendo markdown se necessario."""
-        content = content.strip()
-
-        # Remove blocos de codigo markdown
-        if content.startswith("```"):
-            content = content.split("\n", 1)[-1]
-            content = content.rsplit("```", 1)[0]
-        content = content.strip()
-
-        return json.loads(content)
+        return json.loads(strip_code_fences(content))
 
     def extract(self, text: str) -> tuple[BaseModel, list[str]]:
         """Extrai dados estruturados do texto do documento.

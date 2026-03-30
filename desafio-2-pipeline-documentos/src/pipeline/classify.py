@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.config import GOOGLE_API_KEY, LLM_MODEL, LLM_TEMPERATURE
+from src.pipeline.llm_utils import strip_code_fences
 
 logger = logging.getLogger(__name__)
 
@@ -67,16 +68,11 @@ def classify_document(text: str) -> ClassificationResult:
     truncated_text = text[:4000] if len(text) > 4000 else text
 
     prompt = CLASSIFICATION_PROMPT.format(text=truncated_text)
+    content = ""
 
     try:
         response = llm.invoke(prompt)
-        content = response.content.strip()
-
-        # Remove possivel markdown de code block
-        if content.startswith("```"):
-            content = content.split("\n", 1)[-1]
-            content = content.rsplit("```", 1)[0]
-        content = content.strip()
+        content = strip_code_fences(response.content)
 
         result = json.loads(content)
         doc_type = result.get("doc_type", "").strip().lower()
