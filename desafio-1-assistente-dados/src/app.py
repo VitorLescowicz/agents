@@ -11,9 +11,19 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from src.agent.graph import DB_PATH, ask  # noqa: E402
 from src.db.connection import get_schema_info  # noqa: E402
 from src.viz.chart_picker import render_chart  # noqa: E402
+
+DB_PATH = _PROJECT_ROOT / "data" / "clientes_completo.db"
+AGENT_IMPORT_ERROR: Exception | None = None
+
+try:
+    from src.agent.graph import DB_PATH as AGENT_DB_PATH, ask  # noqa: E402
+
+    DB_PATH = AGENT_DB_PATH
+except Exception as exc:  # pragma: no cover - runtime fallback for local environments
+    ask = None
+    AGENT_IMPORT_ERROR = exc
 
 st.set_page_config(
     page_title="Assistente de Dados",
@@ -90,6 +100,13 @@ with st.sidebar:
     else:
         st.error(f"Banco nao encontrado em `{DB_PATH}`")
 
+    if AGENT_IMPORT_ERROR is not None:
+        st.divider()
+        st.warning(
+            "Interface carregada em modo limitado. O backend de LLM nao foi "
+            f"importado: {AGENT_IMPORT_ERROR}"
+        )
+
     st.divider()
     st.caption("Powered by Gemini 2.5 Flash + LangGraph")
 
@@ -128,6 +145,12 @@ if question:
     with st.chat_message("assistant"):
         with st.spinner("Analisando dados..."):
             try:
+                if ask is None:
+                    raise RuntimeError(
+                        "O backend do assistente nao esta disponivel nesta maquina. "
+                        "A interface Streamlit abriu, mas faltam dependencias como "
+                        "`langchain_google_genai`/`langgraph` para responder perguntas."
+                    )
                 result = ask(question)
 
                 answer = result.get("answer", "Sem resposta.")
